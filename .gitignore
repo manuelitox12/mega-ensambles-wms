@@ -1,0 +1,8 @@
+# Ignorar archivos de datos reales de la empresa
+*.xlsx
+*.xls
+*.csv
+
+# Ignorar archivos temporales del sistema
+.DS_Store
+Thumbs.db

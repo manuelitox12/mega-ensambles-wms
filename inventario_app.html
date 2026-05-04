@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Control de Inventario | Mega Ensambles</title>
+<!-- Typography & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+<!-- External Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" defer></script>
+
+<!-- Application Styles -->
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app">
+  
+  <!-- Mobile Header (Visible solo en pantallas pequeñas) -->
+  <header class="mobile-header">
+    <div class="mobile-logo">Mega Ensambles</div>
+    <button class="hamburger" id="btn-menu" aria-label="Abrir menú" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+  </header>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="logo_original.png" alt="Mega Ensambles Logo" class="sidebar-img">
+      <div class="sidebar-logo">Control de Inventario</div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="window.uiManager.showPage('dashboard')" aria-label="Ir a Dashboard (Alt+1)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        <span>Dashboard</span>
+        <span class="kbd-hint">Alt+1</span>
+      </button>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('productos')" aria-label="Ir a Productos (Alt+2)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+        <span>Catálogo</span>
+        <span class="kbd-hint">Alt+2</span>
+      </button>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('entradas')" aria-label="Ir a Entradas (Alt+3)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+        <span>Entradas</span>
+        <span class="kbd-hint">Alt+3</span>
+      </button>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('salidas')" aria-label="Ir a Salidas (Alt+4)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"></path></svg>
+        <span>Salidas</span>
+        <span class="kbd-hint">Alt+4</span>
+      </button>
+
+      <div class="nav-divider">Operaciones</div>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('registrar')" aria-label="Ir a Cargar Pedido (Alt+5)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <span>Cargar Pedido</span>
+        <span class="kbd-hint">Alt+5</span>
+      </button>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('ajuste')" aria-label="Ir a Ajuste Físico (Alt+6)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <span>Ajuste Físico</span>
+        <span class="kbd-hint">Alt+6</span>
+      </button>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('auditoria')" aria-label="Ir a Auditoría (Alt+7)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        <span>Auditoría</span>
+        <span class="kbd-hint">Alt+7</span>
+      </button>
+
+      <div class="nav-divider">Avanzado</div>
+
+      <button class="nav-item" onclick="window.uiManager.showPage('importar')" aria-label="Ir a Gestión de Datos (Alt+8)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+        <span>Base de Datos</span>
+        <span class="kbd-hint">Alt+8</span>
+      </button>
+      
+      <button class="nav-item" onclick="window.uiManager.showPage('guia')" aria-label="Ir a Guía">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Guía de Uso</span>
+      </button>
+    </nav>
+  </aside>
+  
+  <main class="main" id="main-content">
+    <div id="alert-global" aria-live="polite"></div>
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="pg-dashboard" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Resumen general y estado de salud del inventario en tiempo real.</p>
+      </header>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val c1" id="d-productos">0</div><div class="stat-lbl">Productos en Catálogo</div></div>
+        <div class="stat-card"><div class="stat-val c2" id="d-entradas">0</div><div class="stat-lbl">Total Entradas</div></div>
+        <div class="stat-card"><div class="stat-val c3" id="d-salidas">0</div><div class="stat-lbl">Total Salidas</div></div>
+        <div class="stat-card"><div class="stat-val c4" id="d-sinstock">0</div><div class="stat-lbl">Sin Stock (0 o menos)</div></div>
+      </div>
+
+      <div class="grid-2col">
+        <article class="card">
+          <h2 class="card-title">
+            <svg width="20" height="20" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            Alerta de Stock Bajo (≤ 5)
+          </h2>
+          <div class="tbl-wrap" style="max-height:300px">
+            <table>
+              <thead><tr><th>Código</th><th>Descripción</th><th style="text-align:right">Stock</th></tr></thead>
+              <tbody id="tbl-lowstock"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2 class="card-title">
+            <svg width="20" height="20" fill="none" stroke="var(--accent1)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Últimos Movimientos
+          </h2>
+          <div class="tbl-wrap" style="max-height:300px">
+            <table>
+              <thead><tr><th>Fecha</th><th>Tipo</th><th>Código</th><th style="text-align:right">Cant.</th></tr></thead>
+              <tbody id="tbl-recent"></tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- PRODUCTOS -->
+    <section class="page" id="pg-productos" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Catálogo de Productos</h1>
+        <p class="page-sub">Gestiona la información base. Usa las cajas inferiores para buscar rápidamente.</p>
+      </header>
+      
+      <div class="card" style="padding:0">
+        <div class="tbl-wrap" style="max-height:600px">
+          <table>
+            <thead>
+              <tr id="th-productos">
+                <th data-col="code" onclick="window.uiManager.sortProd('code')" tabindex="0">Código <span>↕</span></th>
+                <th data-col="arancel" onclick="window.uiManager.sortProd('arancel')" tabindex="0">Arancel <span>↕</span></th>
+                <th data-col="desc" onclick="window.uiManager.sortProd('desc')" tabindex="0">Descripción <span>↕</span></th>
+                <th data-col="empaque" onclick="window.uiManager.sortProd('empaque')" tabindex="0">Empaque <span>↕</span></th>
+                <th data-col="entradas" onclick="window.uiManager.sortProd('entradas')" style="text-align:right" tabindex="0">Entradas <span>↕</span></th>
+                <th data-col="salidas" onclick="window.uiManager.sortProd('salidas')" style="text-align:right" tabindex="0">Salidas <span>↕</span></th>
+                <th data-col="stock" onclick="window.uiManager.sortProd('stock')" style="text-align:right" tabindex="0">Existencia <span>↕</span></th>
+              </tr>
+              <tr class="filter-row">
+                <th><input type="text" id="fp-code" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Filtro..." aria-label="Filtrar Código"></th>
+                <th><input type="text" id="fp-arancel" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Filtro..." aria-label="Filtrar Arancel"></th>
+                <th><input type="text" id="fp-desc" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Buscar descripción..." aria-label="Filtrar Descripción"></th>
+                <th><input type="text" id="fp-empaque" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Filtro..." aria-label="Filtrar Empaque"></th>
+                <th><input type="text" id="fp-entradas" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Filtro..." aria-label="Filtrar Entradas"></th>
+                <th><input type="text" id="fp-salidas" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Filtro..." aria-label="Filtrar Salidas"></th>
+                <th><input type="text" id="fp-stock" oninput="window.uiManager.prodPage=0;window.uiManager.renderProductos()" placeholder="Filtro..." aria-label="Filtrar Existencia"></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-productos"></tbody>
+          </table>
+        </div>
+      </div>
+      <nav class="pagination" aria-label="Paginación de productos">
+        <span id="prod-info" class="page-info">—</span>
+        <div class="pagination-controls">
+          <button onclick="window.appController.prodFirst()" aria-label="Primera página">|◀</button> 
+          <button onclick="window.appController.prodPrev()" aria-label="Página anterior">◀ Ant</button> 
+          <button onclick="window.appController.prodNext()" aria-label="Página siguiente">Sig ▶</button> 
+          <button onclick="window.appController.prodLast()" aria-label="Última página">▶|</button>
+        </div>
+      </nav>
+    </section>
+
+    <!-- ENTRADAS -->
+    <section class="page" id="pg-entradas" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Registro de Entradas</h1>
+        <p class="page-sub">Historial de todo el inventario ingresado al sistema.</p>
+      </header>
+
+      <div class="actions-bar">
+        <button class="btn btn-outline" onclick="window.appController.equilibrarFiltrados('entradas')" title="Duplica los registros actuales en la pestaña Salidas">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+          Equilibrar Visibles
+        </button>
+        <button class="btn btn-danger" onclick="window.appController.eliminarFiltrados('entradas')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          Eliminar Visibles
+        </button>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div class="tbl-wrap" style="max-height:600px">
+          <table>
+            <thead>
+              <tr id="th-entradas">
+                <th data-col="code" onclick="window.uiManager.sortEnt('code')" tabindex="0">Código <span>↕</span></th>
+                <th data-col="qty" onclick="window.uiManager.sortEnt('qty')" style="text-align:right" tabindex="0">Cant. <span>↕</span></th>
+                <th data-col="arancel" onclick="window.uiManager.sortEnt('arancel')" tabindex="0">Arancel <span>↕</span></th>
+                <th data-col="desc" onclick="window.uiManager.sortEnt('desc')" tabindex="0">Descripción <span>↕</span></th>
+                <th data-col="empaque" onclick="window.uiManager.sortEnt('empaque')" tabindex="0">Empaque <span>↕</span></th>
+                <th data-col="fecha" onclick="window.uiManager.sortEnt('fecha')" tabindex="0">Fecha <span>↕</span></th>
+                <th data-col="tipo" onclick="window.uiManager.sortEnt('tipo')" tabindex="0">Tipo <span>↕</span></th>
+                <th style="width:140px; text-align:center;">Acciones</th>
+              </tr>
+              <tr class="filter-row">
+                <th><input type="text" id="fe-code" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="Filtro..." aria-label="Filtrar"></th>
+                <th><input type="text" id="fe-qty" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="Filtro..." aria-label="Filtrar"></th>
+                <th><input type="text" id="fe-arancel" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="Filtro..." aria-label="Filtrar"></th>
+                <th><input type="text" id="fe-desc" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="Buscar..." aria-label="Filtrar"></th>
+                <th><input type="text" id="fe-empaque" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="Filtro..." aria-label="Filtrar"></th>
+                <th><input type="text" id="fe-fecha" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="YYYY-MM-DD" aria-label="Filtrar"></th>
+                <th><input type="text" id="fe-tipo" oninput="window.uiManager.entPage=0;window.uiManager.renderEntradas()" placeholder="Filtro..." aria-label="Filtrar"></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-entradas"></tbody>
+          </table>
+        </div>
+      </div>
+      <nav class="pagination" aria-label="Paginación de entradas">
+        <span id="ent-info" class="page-info">—</span>
+        <div class="pagination-controls">
+          <button onclick="window.appController.entFirst()">|◀</button> 
+          <button onclick="window.appController.entPrev()">◀ Ant</button> 
+          <button onclick="window.appController.entNext()">Sig ▶</button> 
+          <button onclick="window.appController.entLast()">▶|</button>
+        </div>
+      </nav>
+    </section>
+
+    <!-- SALIDAS -->
+    <section class="page" id="pg-salidas" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Registro de Salidas</h1>
+        <p class="page-sub">Historial completo de despachos y mercancía saliente.</p>
+      </header>
+
+      <div class="actions-bar">
+        <button class="btn btn-outline" onclick="window.appController.equilibrarFiltrados('salidas')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+          Equilibrar Visibles
+        </button>
+        <button class="btn btn-danger" onclick="window.appController.eliminarFiltrados('salidas')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          Eliminar Visibles
+        </button>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div class="tbl-wrap" style="max-height:600px">
+          <table>
+            <thead>
+              <tr id="th-salidas">
+                <th data-col="code" onclick="window.uiManager.sortSal('code')" tabindex="0">Código <span>↕</span></th>
+                <th data-col="qty" onclick="window.uiManager.sortSal('qty')" style="text-align:right" tabindex="0">Cant. <span>↕</span></th>
+                <th data-col="arancel" onclick="window.uiManager.sortSal('arancel')" tabindex="0">Arancel <span>↕</span></th>
+                <th data-col="desc" onclick="window.uiManager.sortSal('desc')" tabindex="0">Descripción <span>↕</span></th>
+                <th data-col="empaque" onclick="window.uiManager.sortSal('empaque')" tabindex="0">Empaque <span>↕</span></th>
+                <th data-col="fecha" onclick="window.uiManager.sortSal('fecha')" tabindex="0">Fecha <span>↕</span></th>
+                <th data-col="tipo" onclick="window.uiManager.sortSal('tipo')" tabindex="0">Tipo <span>↕</span></th>
+                <th data-col="stock" onclick="window.uiManager.sortSal('stock')" style="text-align:right" tabindex="0">Stock Act. <span>↕</span></th>
+                <th style="width:140px; text-align:center;">Acciones</th>
+              </tr>
+              <tr class="filter-row">
+                <th><input type="text" id="fs-code" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Filtro..."></th>
+                <th><input type="text" id="fs-qty" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Filtro..."></th>
+                <th><input type="text" id="fs-arancel" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Filtro..."></th>
+                <th><input type="text" id="fs-desc" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Buscar..."></th>
+                <th><input type="text" id="fs-empaque" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Filtro..."></th>
+                <th><input type="text" id="fs-fecha" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="YYYY-MM-DD"></th>
+                <th><input type="text" id="fs-tipo" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Filtro..."></th>
+                <th><input type="text" id="fs-stock" oninput="window.uiManager.salPage=0;window.uiManager.renderSalidas()" placeholder="Filtro..."></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-salidas"></tbody>
+          </table>
+        </div>
+      </div>
+      <nav class="pagination" aria-label="Paginación de salidas">
+        <span id="sal-info" class="page-info">—</span>
+        <div class="pagination-controls">
+          <button onclick="window.appController.salFirst()">|◀</button> 
+          <button onclick="window.appController.salPrev()">◀ Ant</button> 
+          <button onclick="window.appController.salNext()">Sig ▶</button> 
+          <button onclick="window.appController.salLast()">▶|</button>
+        </div>
+      </nav>
+    </section>
+
+    <!-- REGISTRAR PEDIDO -->
+    <section class="page" id="pg-registrar" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Cargar Pedido / Transferencia</h1>
+        <p class="page-sub">Importa automáticamente un archivo Excel y el sistema lo procesará hacia el destino elegido.</p>
+      </header>
+
+      <div class="grid-2col">
+        <!-- Izquierda: Carga -->
+        <div class="col-left">
+          <article class="card">
+            <h2 class="card-title">1. Seleccionar Archivo</h2>
+            <div class="drop-zone" id="dz-ext">
+              <div class="drop-icon">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              </div>
+              <div class="drop-lbl">Haz clic aquí o arrastra tu archivo Excel (.xlsx)</div>
+              <div class="drop-fname" id="ext-fname">Ningún archivo seleccionado</div>
+              <input type="file" id="ext-input" accept=".xlsx,.xls" onchange="window.appController.loadExtFile(this)" aria-label="Subir archivo Excel">
+            </div>
+          </article>
+        </div>
+
+        <!-- Derecha: Parámetros -->
+        <div class="col-right">
+          <article class="card">
+            <h2 class="card-title">2. Parámetros de Registro</h2>
+            
+            <div class="form-group destination-group">
+              <label for="mov-destino">Destino (¡Muy Importante!)</label>
+              <select id="mov-destino" class="input-destination">
+                <option value="salidas">Registrar como SALIDAS (Restar Stock)</option>
+                <option value="entradas">Registrar como ENTRADAS (Sumar Stock)</option>
+              </select>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+              <div class="form-group">
+                <label for="mov-fecha">Fecha del Documento</label>
+                <input type="date" id="mov-fecha">
+              </div>
+              <div class="form-group">
+                <label for="mov-tipo">Tipo de Operación</label>
+                <select id="mov-tipo">
+                  <option value="P">P - Pedido</option>
+                  <option value="T">T - Transferencia</option>
+                  <option value="M">M - Muestra</option>
+                  <option value="E">E - Entrada</option>
+                  <option value="I">I - Inventario</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+              <div class="form-group">
+                <label for="mov-doc">N° Documento / Referencia</label>
+                <input type="text" id="mov-doc" placeholder="Ej: PED-04-2026">
+              </div>
+              <div class="form-group">
+                <label for="mov-arancel">Arancel General (Opcional)</label>
+                <input type="text" id="mov-arancel" placeholder="Se aplica a nuevos">
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-lg" id="btn-procesar" disabled onclick="window.appController.procesarMovimiento()">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+              Procesar y Previsualizar
+            </button>
+            <div class="progress" id="mov-progress"><div class="progress-bar"><div class="progress-fill"></div></div><div class="prog-text">Analizando archivo...</div></div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Preview de Resultados -->
+      <section id="mov-results" class="results-section" style="display:none">
+        <h2 class="page-title" style="font-size: 1.4rem; margin-top:10px; border-top: 1px solid var(--border); padding-top:20px;">3. Previsualización y Corrección</h2>
+        
+        <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+          <div class="stat-card"><div class="stat-val c1" id="mr-total">0</div><div class="stat-lbl">Items Detectados</div></div>
+          <div class="stat-card"><div class="stat-val c3" id="mr-entrada">0</div><div class="stat-lbl">Códigos Nuevos / Desconocidos</div></div>
+        </div>
+        
+        <article class="card bg-highlight">
+          <h3 class="card-title">Herramienta de Búsqueda y Reemplazo Inteligente</h3>
+          <p class="text-muted" style="margin-bottom: 16px; font-size:0.85rem;">Si un código sale como "NUEVO" pero sabes que existe, búscalo en el catálogo y reemplázalo en este lote antes de confirmar.</p>
+          
+          <div class="form-group" style="margin-bottom: 12px;">
+            <input type="text" id="tool-search-cat" placeholder="Buscar en catálogo (palabra clave, descripción, código)..." oninput="window.appController.searchCatalog()">
+          </div>
+          <div class="tbl-wrap" style="max-height:200px; margin-bottom:20px; display:none;" id="tool-search-res-wrap">
+            <table><thead><tr><th>Código</th><th>Descripción</th><th>Stock</th><th>Acción</th></tr></thead><tbody id="tool-search-res"></tbody></table>
+          </div>
+
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr auto; align-items: end; margin-bottom:0;">
+            <div class="form-group">
+              <label for="tool-find">Código Incorrecto (A reemplazar)</label>
+              <input type="text" id="tool-find" placeholder="Ej: REF-MALA">
+            </div>
+            <div class="form-group">
+              <label for="tool-replace">Código Correcto</label>
+              <input type="text" id="tool-replace" placeholder="Ej: REF-BUENA">
+            </div>
+            <button class="btn btn-outline" onclick="window.appController.applyReplace()">Reemplazar en el lote</button>
+          </div>
+        </article>
+        
+        <article class="card">
+          <h3 class="card-title">Detalle de Elementos a Cargar</h3>
+          <div class="tbl-wrap" style="max-height:300px">
+            <table>
+              <thead><tr><th style="width:50px">#</th><th>Código</th><th style="text-align:right">Cant.</th><th>Descripción</th><th>Arancel</th></tr></thead>
+              <tbody id="mr-tbl-sal"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <div class="confirmation-zone">
+          <button class="btn btn-green btn-lg btn-block" id="btn-confirmar-mov" onclick="window.appController.confirmarMovimiento()">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+            Confirmar y Guardar Definitivamente
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <!-- AJUSTE FISICO -->
+    <section class="page" id="pg-ajuste" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Ajuste por Inventario Físico</h1>
+        <p class="page-sub">El sistema calculará automáticamente la diferencia para que el sistema empate con tu conteo real en bodega.</p>
+      </header>
+
+      <article class="card" style="max-width: 800px; margin: 0 auto;">
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="form-group">
+            <label for="aj-code">Código Interno</label>
+            <input type="text" id="aj-code" placeholder="Ej: NYLON.E-0625" oninput="window.appController.buscarAjuste()">
+          </div>
+          <div class="form-group">
+            <label for="aj-qty">Conteo Físico Real</label>
+            <input type="number" id="aj-qty" placeholder="Cantidad física en bodega" oninput="window.appController.calcularAjuste()">
+          </div>
+          <div class="form-group">
+            <label for="aj-fecha">Fecha de Ajuste</label>
+            <input type="date" id="aj-fecha">
+          </div>
+        </div>
+        
+        <div id="aj-info" class="info-box">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:8px; opacity:0.6"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <br>Ingresa un código para ver su estado actual en el sistema.
+        </div>
+        
+        <div style="text-align: right; margin-top: 24px;">
+          <button class="btn btn-primary" id="btn-ajustar" disabled onclick="window.appController.guardarAjuste()">
+            Aplicar Ajuste Automático
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- AUDITORIA INTELIGENTE -->
+    <section class="page" id="pg-auditoria" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Auditoría Inteligente (Reconciliación)</h1>
+        <p class="page-sub">Detecta descuadres instantáneamente comparando Entradas vs Salidas de un documento o lote.</p>
+      </header>
+
+      <article class="card">
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+          <div class="form-group">
+            <label for="aud-tipo">Filtro Rápido (Documento/Tipo)</label>
+            <input type="text" id="aud-tipo" placeholder="Ej: 315 o PED-20" oninput="window.appController.runAudit()">
+          </div>
+          <div class="form-group">
+            <label for="aud-code">Filtro por Código Específico</label>
+            <input type="text" id="aud-code" placeholder="Ej: 9314" oninput="window.appController.runAudit()">
+          </div>
+          <div class="form-group">
+            <label for="aud-mostrar">Visualización</label>
+            <select id="aud-mostrar" onchange="window.appController.runAudit()">
+              <option value="todos">Mostrar Todo el Lote</option>
+              <option value="descuadrados">Ocultar los que cuadran (Solo errores)</option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" style="padding:0">
+        <div class="tbl-wrap" style="max-height: 500px">
+          <table>
+            <thead>
+              <tr>
+                <th>Código Analizado</th>
+                <th style="text-align:right">Total Entradas</th>
+                <th style="text-align:right">Total Salidas</th>
+                <th style="text-align:right">Descuadre</th>
+                <th>Estado de Conciliación</th>
+                <th style="text-align:center">Solución Automática</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-auditoria">
+               <tr>
+                 <td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted)">
+                   <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:12px; opacity:0.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg><br>
+                   Escribe el número de documento arriba para iniciar la auditoría.
+                 </td>
+               </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- IMPORTAR / GESTION DE DATOS -->
+    <section class="page" id="pg-importar" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Gestión de Datos (Backups)</h1>
+        <p class="page-sub">Administra la base de datos local. Genera tus respaldos diarios en Excel.</p>
+      </header>
+
+      <div class="grid-2col">
+        <article class="card card-glow" style="border-color: var(--accent1);">
+          <h2 class="card-title" style="color: var(--accent1);">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Exportar Respaldo Completo (Excel)
+          </h2>
+          <p class="text-muted" style="margin-bottom: 24px; line-height: 1.6;">
+            <strong>¡Haz esto al final de cada día!</strong><br>
+            Se generará un archivo .xlsx idéntico a tu plantilla original, conservando fórmulas VLOOKUP, colores y estructura. Este archivo es tu seguro de vida.
+          </p>
+          <button class="btn btn-primary btn-block btn-lg" id="btn-export-excel" onclick="window.appController.exportarExcelCompleto()">
+            Generar y Descargar Archivo .XLSX
+          </button>
+          <div class="progress" id="exp-progress"><div class="progress-bar"><div class="progress-fill"></div></div><div class="prog-text" id="exp-text">Compilando Excel...</div></div>
+        </article>
+
+        <article class="card" style="border-color: rgba(239, 68, 68, 0.3);">
+          <h2 class="card-title" style="color: var(--red)">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            Restauración de Emergencia (CUIDADO)
+          </h2>
+          <p class="text-muted" style="margin-bottom: 16px; font-size: 0.85rem; color: var(--red);">
+            Al subir un archivo aquí, <strong>SE BORRARÁ TODA LA BASE DE DATOS ACTUAL</strong> y se reemplazará por los datos del archivo. Úsalo solo para restaurar un respaldo antiguo.
+          </p>
+          
+          <div class="drop-zone" id="dz-inv">
+            <div class="drop-icon">
+              <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            </div>
+            <div class="drop-lbl">Sube un archivo de Respaldo Previo (.xlsx)</div>
+            <div class="drop-fname" id="inv-fname"></div>
+            <input type="file" accept=".xlsx,.xls" onchange="window.appController.loadInvFile(this)" aria-label="Restaurar desde Excel">
+          </div>
+          
+          <div style="margin-top: 20px; text-align:right">
+            <button class="btn btn-danger" id="btn-import" disabled onclick="window.appController.importarExcel()">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Confirmar Destrucción y Restaurar
+            </button>
+          </div>
+          <div class="progress" id="imp-progress"><div class="progress-bar"><div class="progress-fill"></div></div><div class="prog-text" id="imp-text">Leyendo hojas y limpiando base de datos...</div></div>
+        </article>
+      </div>
+      <div id="imp-result"></div>
+    </section>
+
+    <!-- GUIA DE USO -->
+    <section class="page" id="pg-guia" role="tabpanel">
+      <header class="page-header">
+        <h1 class="page-title">Guía Rápida y Atajos</h1>
+        <p class="page-sub">Manual de inducción y atajos de teclado para usar el sistema a la velocidad del rayo.</p>
+      </header>
+
+      <div class="grid-2col">
+        <article class="card">
+          <h2 class="card-title">Instrucciones Básicas</h2>
+          <div class="text-content">
+            <h3 style="color:var(--accent1); margin:15px 0 5px;">1. Procesar Archivos (Día a Día)</h3>
+            <p>Ve a <strong>Cargar Pedido</strong>. Selecciona "Salidas" o "Entradas". Sube el Excel enviado por logística. El sistema extrae códigos y cantidades solo. Corrige códigos usando la herramienta inteligente, y da clic en Confirmar.</p>
+            
+            <h3 style="color:var(--accent1); margin:15px 0 5px;">2. Cuadrar Inventarios (Auditoría)</h3>
+            <p>Si te reportan que un documento quedó mal cruzado, ve a <strong>Auditoría</strong>, digita el número del documento y el sistema te dirá exactamente dónde sobran o faltan cosas.</p>
+            
+            <h3 style="color:var(--accent1); margin:15px 0 5px;">3. Seguridad Diaria</h3>
+            <p>Antes de irte a casa, ve a <strong>Gestión de Datos</strong> y descarga tu Excel. Esa es la copia sagrada de la empresa.</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2 class="card-title">Atajos de Teclado Profesionales</h2>
+          <table style="margin-top:10px">
+            <tbody>
+              <tr><td style="width:100px"><kbd class="kbd">Alt + 1</kbd></td><td>Ir a Dashboard</td></tr>
+              <tr><td><kbd class="kbd">Alt + 2</kbd></td><td>Ir a Catálogo</td></tr>
+              <tr><td><kbd class="kbd">Alt + 3</kbd></td><td>Ir a Entradas</td></tr>
+              <tr><td><kbd class="kbd">Alt + 4</kbd></td><td>Ir a Salidas</td></tr>
+              <tr><td><kbd class="kbd">Alt + 5</kbd></td><td>Cargar Pedido rápido</td></tr>
+              <tr><td><kbd class="kbd">Alt + 6</kbd></td><td>Hacer un Ajuste Físico</td></tr>
+              <tr><td><kbd class="kbd">Alt + 7</kbd></td><td>Abrir Auditoría</td></tr>
+            </tbody>
+          </table>
+          <p class="text-muted" style="margin-top:20px; font-size:0.8rem">Presiona estas teclas desde cualquier parte del sistema para saltar instantáneamente a otra pantalla, igual que un software de cajero o punto de venta avanzado.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Application Scripts in SOLID order -->
+<script src="js/utils/Utils.js"></script>
+<script src="js/services/DatabaseService.js"></script>
+<script src="js/services/InventoryService.js"></script>
+<script src="js/services/ExcelService.js"></script>
+<script src="js/views/UIManager.js"></script>
+<script src="js/controllers/AppController.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
