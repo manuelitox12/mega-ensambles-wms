@@ -148,6 +148,32 @@ class InventoryService {
   }
 
   /**
+   * Edita la referencia (tipo) de un lote de movimientos.
+   * Edits the reference (tipo) of a batch of movements.
+   */
+  async editarLoteReferencia(origen, filteredItems, nuevaRef) {
+    if (!filteredItems || !filteredItems.length) return false;
+    
+    const keys = filteredItems.map(item => item._pk).filter(pk => pk !== undefined && pk !== null);
+    if (!keys.length) return false;
+
+    const lote = filteredItems.map(item => ({
+      ...item,
+      tipo: nuevaRef
+    }));
+
+    // Remove the temporary properties used for UI
+    lote.forEach(x => {
+      delete x._idx;
+      delete x._stock;
+    });
+
+    await this.dbService.putBatch(origen, lote);
+    await this.loadFromDB();
+    return lote.length;
+  }
+
+  /**
    * Deletes a batch of filtered records.
    * Elimina un lote de registros filtrados.
    */

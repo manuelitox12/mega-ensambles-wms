@@ -58,7 +58,8 @@ class AppController {
     const isSalida = d.value === 'salidas';
     
     d.style.borderColor = isSalida ? 'var(--red)' : 'var(--green)';
-    d.style.backgroundColor = isSalida ? '#ffebeb' : '#ebffeb';
+    d.style.backgroundColor = isSalida ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+    d.style.color = '#fff';
     
     btn.className = isSalida ? 'btn btn-red' : 'btn btn-green';
     btn.style.backgroundColor = isSalida ? 'var(--red)' : 'var(--green)';
@@ -163,6 +164,28 @@ class AppController {
       this.uiManager.renderAll();
       this.syncChannel.postMessage('db_updated');
       window.Utils.showGlobalAlert(`Se eliminaron ${count} registros de ${origen.toUpperCase()}.`, 'ok');
+    }
+  }
+
+  async cambiarReferenciaFiltrados(origen) {
+    const arr = origen === 'entradas' ? this.uiManager.getFilteredEnt() : this.uiManager.getFilteredSal();
+    if (!arr.length) {
+      window.Utils.showGlobalAlert('No hay registros filtrados para modificar.', 'err');
+      return;
+    }
+
+    const currentRef = arr[0].tipo || '';
+    const nuevaRef = prompt(`Cambiar N° Documento / Referencia para los ${arr.length} registros visibles en ${origen.toUpperCase()}:`, currentRef);
+    
+    if (nuevaRef === null || nuevaRef.trim() === '') return;
+
+    if (!confirm(`¿Estás seguro de cambiar la referencia de ${arr.length} registros a "${nuevaRef.trim().toUpperCase()}"?`)) return;
+
+    const count = await this.invService.editarLoteReferencia(origen, arr, nuevaRef.trim().toUpperCase());
+    if (count > 0) {
+      this.uiManager.renderAll();
+      this.syncChannel.postMessage('db_updated');
+      window.Utils.showGlobalAlert(`Se actualizaron ${count} registros con la nueva referencia.`, 'ok');
     }
   }
 
@@ -286,8 +309,14 @@ class AppController {
       
       document.getElementById('mov-results').style.display = 'none';
       this.extFileData = null;
-      document.getElementById('ext-fname').textContent = '';
+      document.getElementById('ext-fname').textContent = 'Ningún archivo seleccionado';
+      document.getElementById('ext-input').value = '';
+      document.getElementById('mov-doc').value = '';
+      document.getElementById('mov-arancel').value = '';
       document.getElementById('dz-ext').classList.remove('loaded');
+      
+      this.checkMovReady();
+      this.updateDestinoVisuals();
       
       window.Utils.showGlobalAlert(`Registrado: ${res.ops} operaciones guardadas en ${destino.toUpperCase()} (${res.prods} productos afectados o nuevos).`, 'ok');
     } catch (err) {
